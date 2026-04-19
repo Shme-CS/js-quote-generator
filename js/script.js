@@ -95,12 +95,24 @@ const quoteAuthor = document.getElementById('quoteAuthor');
 const newQuoteBtn = document.getElementById('newQuoteBtn');
 const loadingSpinner = document.getElementById('loadingSpinner');
 const quoteContent = document.getElementById('quoteContent');
+const copyBtn = document.getElementById('copyBtn');
+const tweetBtn = document.getElementById('tweetBtn');
+const favoriteBtn = document.getElementById('favoriteBtn');
+const categoryFilter = document.getElementById('categoryFilter');
+const viewFavoritesBtn = document.getElementById('viewFavoritesBtn');
+const favoritesCount = document.getElementById('favoritesCount');
+const favoritesModal = document.getElementById('favoritesModal');
+const closeFavoritesBtn = document.getElementById('closeFavoritesBtn');
+const favoritesList = document.getElementById('favoritesList');
+const clearFavoritesBtn = document.getElementById('clearFavoritesBtn');
 
 // Track last displayed quote to prevent immediate repetition
 let lastQuoteIndex = -1;
 let isLoading = false;
 let apiFailureCount = 0;
 let usingFallback = false;
+let currentQuote = { text: '', author: '' };
+let favorites = JSON.parse(localStorage.getItem('favoriteQuotes')) || [];
 
 // Function to sleep/delay
 function sleep(ms) {
@@ -226,6 +238,7 @@ async function displayQuote() {
     }
     
     setTimeout(() => {
+        currentQuote = { text: quote.text, author: quote.author };
         quoteText.textContent = quote.text;
         quoteAuthor.textContent = `- ${quote.author}`;
         
@@ -233,6 +246,9 @@ async function displayQuote() {
         if (quote.source === 'fallback') {
             quoteAuthor.textContent += ' (Offline)';
         }
+        
+        // Update favorite button state
+        updateFavoriteButton();
         
         // Add fade in effect with scale
         quoteText.style.opacity = '1';
@@ -244,16 +260,163 @@ async function displayQuote() {
     }, 400);
 }
 
+// Copy quote to clipboard
+function copyQuote() {
+    const text = `"${currentQuote.text}" - ${currentQuote.author}`;
+    navigator.clipboard.writeText(text).then(() => {
+        showSuccessNotification('✅ Quote copied to clipboard!');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        showErrorNotification('❌ Failed to copy quote');
+    });
+}
+
+// Tweet quote
+function tweetQuote() {
+    const text = `"${currentQuote.text}" - ${currentQuote.author}`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    window.open(twitterUrl, '_blank');
+}
+
+// Toggle favorite
+function toggleFavorite() {
+    const quoteKey = `${currentQuote.text}|${currentQuote.author}`;
+    const index = favorites.findIndex(fav => `${fav.text}|${fav.author}` === quoteKey);
+    
+    if (index > -1) {
+        // Remove from favorites
+        favorites.splice(index, 1);
+        showSuccessNotification('💔 Removed from favorites');
+    } else {
+        // Add to favorites
+        favorites.push({ ...currentQuote, timestamp: Date.now() });
+        showSuccessNotification('❤️ Added to favorites!');
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('favoriteQuotes', JSON.stringify(favorites));
+    updateFavoriteButton();
+    updateFavoritesCount();
+}
+
+// Update favorite button state
+function updateFavoriteButton() {
+    const quoteKey = `${currentQuote.text}|${currentQuote.author}`;
+    const isFavorite = favorites.some(fav => `${fav.text}|${fav.author}` === quoteKey);
+    
+    if (isFavorite) {
+        favoriteBtn.classList.add('active');
+        favoriteBtn.innerHTML = '<span class="btn-icon">❤️</span>';
+    } else {
+        favoriteBtn.classList.remove('active');
+        favoriteBtn.innerHTML = '<span class="btn-icon">🤍</span>';
+    }
+}
+
+// Update favorites count
+function updateFavoritesCount() {
+    favoritesCount.textContent = favorites.length;
+}
+
+// Show success notification
+function showSuccessNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'error-notification';
+    notification.style.background = 'linear-gradient(135deg, #51cf66 0%, #40c057 100%)';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.classList.add('show'), 10);
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 2000);
+}
+
+// Show favorites modal
+function showFavoritesModal() {
+    if (favorites.length === 0) {
+        favoritesList.innerHTML = '<p class="no-favorites">No favorite quotes yet. Click the heart icon to save quotes!</p>';
+    } else {
+        favoritesList.innerHTML = favorites.map((fav, index) => `
+            <div class="favorite-item">
+                <p class="favorite-item-text">"${fav.text}"</p>
+                <p class="favorite-item-author">- ${fav.author}</p>
+                <div class="favorite-item-actions">
+                    <button class="btn btn-secondary btn-small" onclick="copyFavorite(${index})">
+                        <span class="btn-icon">📋</span> Copy
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="removeFavorite(${index})">
+                        <span class="btn-icon">🗑️</span> Remove
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+    favoritesModal.classList.add('show');
+}
+
+// Hide favorites modal
+function hideFavoritesModal() {
+    favoritesModal.classList.remove('show');
+}
+
+// Copy favorite quote
+function copyFavorite(index) {
+    const fav = favorites[index];
+    const text = `"${fav.text}" - ${fav.author}`;
+    navigator.clipboard.writeText(text).then(() => {
+        showSuccessNotification('✅ Quote copied!');
+    });
+}
+
+// Remove favorite quote
+function removeFavorite(index) {
+    favorites.splice(index, 1);
+    localStorage.setItem('favoriteQuotes', JSON.stringify(favorites));
+    updateFavoritesCount();
+    showFavoritesModal(); // Refresh the list
+    showSuccessNotification('💔 Removed from favorites');
+}
+
+// Clear all favorites
+function clearAllFavorites() {
+    if (confirm('Are you sure you want to clear all favorites?')) {
+        favorites = [];
+        localStorage.setItem('favoriteQuotes', JSON.stringify(favorites));
+        updateFavoritesCount();
+        updateFavoriteButton();
+        hideFavoritesModal();
+        showSuccessNotification('🗑️ All favorites cleared');
+    }
+}
+
 // Event Listeners
 newQuoteBtn.addEventListener('click', displayQuote);
+copyBtn.addEventListener('click', copyQuote);
+tweetBtn.addEventListener('click', tweetQuote);
+favoriteBtn.addEventListener('click', toggleFavorite);
+viewFavoritesBtn.addEventListener('click', showFavoritesModal);
+closeFavoritesBtn.addEventListener('click', hideFavoritesModal);
+clearFavoritesBtn.addEventListener('click', clearAllFavorites);
+
+// Close modal on outside click
+favoritesModal.addEventListener('click', (e) => {
+    if (e.target === favoritesModal) {
+        hideFavoritesModal();
+    }
+});
 
 // Display random quote on page load
 window.addEventListener('DOMContentLoaded', async () => {
     showLoading();
+    updateFavoritesCount();
     
     try {
         // Fetch initial quote from API
         const quote = await fetchQuoteFromAPI();
+        currentQuote = { text: quote.text, author: quote.author };
         quoteText.textContent = quote.text;
         quoteAuthor.textContent = `- ${quote.author}`;
         
@@ -262,10 +425,13 @@ window.addEventListener('DOMContentLoaded', async () => {
             quoteAuthor.textContent += ' (Offline)';
             showErrorNotification('⚠️ API unavailable. Using offline quotes.');
         }
+        
+        updateFavoriteButton();
     } catch (error) {
         console.error('Critical error on page load:', error);
         // Show fallback quote
         const fallbackQuote = getRandomQuote();
+        currentQuote = { text: fallbackQuote.text, author: fallbackQuote.author };
         quoteText.textContent = fallbackQuote.text;
         quoteAuthor.textContent = `- ${fallbackQuote.author} (Offline)`;
         showErrorNotification('⚠️ Unable to load quotes. Using offline mode.');
