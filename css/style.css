@@ -353,10 +353,11 @@ h1 {
 /* Button Container */
 .button-container {
     display: flex;
+    flex-direction: column;
     justify-content: center;
+    align-items: stretch;
     gap: 15px;
     animation: buttonFadeIn 1.4s ease-out;
-    flex-wrap: wrap;
 }
 
 @keyframes buttonFadeIn {
@@ -380,11 +381,13 @@ h1 {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     text-transform: uppercase;
     letter-spacing: 1px;
     position: relative;
     overflow: hidden;
+    width: 100%;
 }
 
 .btn::before {
@@ -416,8 +419,6 @@ h1 {
     background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
     color: white;
     box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
-    padding: 15px 25px;
-    font-size: 1rem;
 }
 
 .btn-secondary:hover {
@@ -430,7 +431,6 @@ h1 {
     color: #667eea;
     border: 2px solid #667eea;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-    padding: 15px 20px;
 }
 
 .btn-favorite:hover {
@@ -794,7 +794,7 @@ h1 {
     
     .btn-secondary,
     .btn-favorite {
-        flex: 1;
+        width: 100%;
         justify-content: center;
     }
     
