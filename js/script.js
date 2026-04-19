@@ -89,23 +89,55 @@ const quoteText = document.getElementById('quoteText');
 const quoteAuthor = document.getElementById('quoteAuthor');
 const newQuoteBtn = document.getElementById('newQuoteBtn');
 
-// Function to get random quote
+// Track last displayed quote to prevent immediate repetition
+let lastQuoteIndex = -1;
+
+// Function to get random quote (no immediate repetition)
 function getRandomQuote() {
-    const randomIndex = Math.floor(Math.random() * quotes.length);
+    let randomIndex;
+    
+    // If there's only one quote, return it
+    if (quotes.length === 1) {
+        return quotes[0];
+    }
+    
+    // Keep generating random index until it's different from last one
+    do {
+        randomIndex = Math.floor(Math.random() * quotes.length);
+    } while (randomIndex === lastQuoteIndex);
+    
+    // Update last quote index
+    lastQuoteIndex = randomIndex;
+    
     return quotes[randomIndex];
 }
 
-// Function to display quote
+// Function to display quote with animation
 function displayQuote() {
-    const quote = getRandomQuote();
-    quoteText.textContent = quote.text;
-    quoteAuthor.textContent = `- ${quote.author}`;
+    // Add fade out effect
+    quoteText.style.opacity = '0';
+    quoteAuthor.style.opacity = '0';
+    
+    setTimeout(() => {
+        const quote = getRandomQuote();
+        quoteText.textContent = quote.text;
+        quoteAuthor.textContent = `- ${quote.author}`;
+        
+        // Add fade in effect
+        quoteText.style.opacity = '1';
+        quoteAuthor.style.opacity = '1';
+    }, 300);
 }
 
 // Event Listeners
 newQuoteBtn.addEventListener('click', displayQuote);
 
 // Display random quote on page load
-window.addEventListener('DOMContentLoaded', displayQuote);
+window.addEventListener('DOMContentLoaded', () => {
+    // Initial display without animation
+    const quote = getRandomQuote();
+    quoteText.textContent = quote.text;
+    quoteAuthor.textContent = `- ${quote.author}`;
+});
 
 console.log('Quote Generator initialized with', quotes.length, 'quotes');
