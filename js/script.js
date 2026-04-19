@@ -105,6 +105,7 @@ const favoritesModal = document.getElementById('favoritesModal');
 const closeFavoritesBtn = document.getElementById('closeFavoritesBtn');
 const favoritesList = document.getElementById('favoritesList');
 const clearFavoritesBtn = document.getElementById('clearFavoritesBtn');
+const themeToggle = document.getElementById('themeToggle');
 
 // Track last displayed quote to prevent immediate repetition
 let lastQuoteIndex = -1;
@@ -113,6 +114,7 @@ let apiFailureCount = 0;
 let usingFallback = false;
 let currentQuote = { text: '', author: '' };
 let favorites = JSON.parse(localStorage.getItem('favoriteQuotes')) || [];
+let isDarkMode = localStorage.getItem('darkMode') === 'true';
 
 // Function to sleep/delay
 function sleep(ms) {
@@ -392,6 +394,26 @@ function clearAllFavorites() {
     }
 }
 
+// Toggle dark mode
+function toggleDarkMode() {
+    isDarkMode = !isDarkMode;
+    document.body.classList.toggle('dark-mode', isDarkMode);
+    localStorage.setItem('darkMode', isDarkMode);
+    
+    // Update icon
+    const themeIcon = themeToggle.querySelector('.theme-icon');
+    themeIcon.textContent = isDarkMode ? '☀️' : '🌙';
+}
+
+// Initialize dark mode
+function initializeDarkMode() {
+    if (isDarkMode) {
+        document.body.classList.add('dark-mode');
+        const themeIcon = themeToggle.querySelector('.theme-icon');
+        themeIcon.textContent = '☀️';
+    }
+}
+
 // Event Listeners
 newQuoteBtn.addEventListener('click', displayQuote);
 copyBtn.addEventListener('click', copyQuote);
@@ -400,6 +422,7 @@ favoriteBtn.addEventListener('click', toggleFavorite);
 viewFavoritesBtn.addEventListener('click', showFavoritesModal);
 closeFavoritesBtn.addEventListener('click', hideFavoritesModal);
 clearFavoritesBtn.addEventListener('click', clearAllFavorites);
+themeToggle.addEventListener('click', toggleDarkMode);
 
 // Close modal on outside click
 favoritesModal.addEventListener('click', (e) => {
@@ -410,6 +433,7 @@ favoritesModal.addEventListener('click', (e) => {
 
 // Display random quote on page load
 window.addEventListener('DOMContentLoaded', async () => {
+    initializeDarkMode();
     showLoading();
     updateFavoritesCount();
     
