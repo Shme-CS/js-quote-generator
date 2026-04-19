@@ -14,7 +14,7 @@ const CONFIG = {
     API_URL: 'https://api.quotable.io/random',
     MAX_RETRIES: 3,
     RETRY_DELAY: 1000,
-    ANIMATION_DELAY: 400,
+    ANIMATION_DELAY: 200,  // Reduced from 400ms to 200ms
     NOTIFICATION_DURATION: 2000,
     ERROR_NOTIFICATION_DURATION: 3000
 };
@@ -246,11 +246,11 @@ const QuoteManager = {
     },
     
     /**
-     * Display quote with animation
+     * Display quote with optimized animation
      * @param {Object} quote - Quote object to display
      */
     async display(quote) {
-        // Fade out current quote
+        // Start fade out and API notification simultaneously
         this.fadeOut();
         
         // Show notification if using fallback for first time
@@ -258,7 +258,7 @@ const QuoteManager = {
             UI.showNotification('⚠️ API unavailable. Using offline quotes.', 'error');
         }
         
-        // Wait for animation
+        // Reduced wait time for faster transition
         await sleep(CONFIG.ANIMATION_DELAY);
         
         // Update state and DOM
@@ -287,7 +287,7 @@ const QuoteManager = {
     },
     
     /**
-     * Fade out quote elements
+     * Fade out quote elements with faster transition
      */
     fadeOut() {
         DOM.quoteText.style.opacity = '0';
