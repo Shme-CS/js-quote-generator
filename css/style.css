@@ -315,7 +315,7 @@ h1 {
 
 .quote-content {
     padding-top: 20px;
-    transition: opacity 0.4s ease, transform 0.4s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .quote-content.loading {
@@ -334,7 +334,7 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.4s ease, transform 0.4s ease, color 0.3s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease, color 0.3s ease;
     font-family: 'Playfair Display', Georgia, serif;
     letter-spacing: 0.3px;
 }
@@ -345,7 +345,7 @@ h1 {
     font-weight: 600;
     text-align: right;
     margin-top: 15px;
-    transition: opacity 0.4s ease, transform 0.4s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
     font-family: 'Poppins', sans-serif;
     letter-spacing: 0.5px;
 }
