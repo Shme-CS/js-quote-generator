@@ -1,6 +1,9 @@
 // Quote Generator JavaScript
 
-// Static Quote Data
+// API Configuration
+const API_URL = 'https://api.quotable.io/random';
+
+// Static Quote Data (Fallback)
 const quotes = [
     {
         text: "The only way to do great work is to love what you do.",
@@ -91,8 +94,31 @@ const newQuoteBtn = document.getElementById('newQuoteBtn');
 
 // Track last displayed quote to prevent immediate repetition
 let lastQuoteIndex = -1;
+let isLoading = false;
 
-// Function to get random quote (no immediate repetition)
+// Function to fetch quote from API
+async function fetchQuoteFromAPI() {
+    try {
+        const response = await fetch(API_URL);
+        
+        if (!response.ok) {
+            throw new Error('API request failed');
+        }
+        
+        const data = await response.json();
+        
+        return {
+            text: data.content,
+            author: data.author
+        };
+    } catch (error) {
+        console.error('Error fetching quote from API:', error);
+        // Return fallback quote if API fails
+        return getRandomQuote();
+    }
+}
+
+// Function to get random quote from static data (fallback)
 function getRandomQuote() {
     let randomIndex;
     
@@ -112,20 +138,42 @@ function getRandomQuote() {
     return quotes[randomIndex];
 }
 
+// Function to show loading state
+function showLoading() {
+    isLoading = true;
+    newQuoteBtn.disabled = true;
+    newQuoteBtn.innerHTML = '<span class="btn-icon">⏳</span>Loading...';
+}
+
+// Function to hide loading state
+function hideLoading() {
+    isLoading = false;
+    newQuoteBtn.disabled = false;
+    newQuoteBtn.innerHTML = '<span class="btn-icon">✨</span>New Quote';
+}
+
 // Function to display quote with animation
-function displayQuote() {
+async function displayQuote() {
+    if (isLoading) return;
+    
+    showLoading();
+    
     // Add fade out effect
     quoteText.style.opacity = '0';
     quoteAuthor.style.opacity = '0';
     
+    // Fetch new quote from API
+    const quote = await fetchQuoteFromAPI();
+    
     setTimeout(() => {
-        const quote = getRandomQuote();
         quoteText.textContent = quote.text;
         quoteAuthor.textContent = `- ${quote.author}`;
         
         // Add fade in effect
         quoteText.style.opacity = '1';
         quoteAuthor.style.opacity = '1';
+        
+        hideLoading();
     }, 300);
 }
 
@@ -133,11 +181,15 @@ function displayQuote() {
 newQuoteBtn.addEventListener('click', displayQuote);
 
 // Display random quote on page load
-window.addEventListener('DOMContentLoaded', () => {
-    // Initial display without animation
-    const quote = getRandomQuote();
+window.addEventListener('DOMContentLoaded', async () => {
+    showLoading();
+    
+    // Fetch initial quote from API
+    const quote = await fetchQuoteFromAPI();
     quoteText.textContent = quote.text;
     quoteAuthor.textContent = `- ${quote.author}`;
+    
+    hideLoading();
 });
 
-console.log('Quote Generator initialized with', quotes.length, 'quotes');
+console.log('Quote Generator initialized with API integration');
