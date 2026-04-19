@@ -93,6 +93,8 @@ const quotes = [
 const quoteText = document.getElementById('quoteText');
 const quoteAuthor = document.getElementById('quoteAuthor');
 const newQuoteBtn = document.getElementById('newQuoteBtn');
+const loadingSpinner = document.getElementById('loadingSpinner');
+const quoteContent = document.getElementById('quoteContent');
 
 // Track last displayed quote to prevent immediate repetition
 let lastQuoteIndex = -1;
@@ -190,6 +192,8 @@ function showLoading() {
     isLoading = true;
     newQuoteBtn.disabled = true;
     newQuoteBtn.innerHTML = '<span class="btn-icon">⏳</span>Loading...';
+    loadingSpinner.classList.add('active');
+    quoteContent.classList.add('loading');
 }
 
 // Function to hide loading state
@@ -197,6 +201,8 @@ function hideLoading() {
     isLoading = false;
     newQuoteBtn.disabled = false;
     newQuoteBtn.innerHTML = '<span class="btn-icon">✨</span>New Quote';
+    loadingSpinner.classList.remove('active');
+    quoteContent.classList.remove('loading');
 }
 
 // Function to display quote with animation
@@ -205,9 +211,11 @@ async function displayQuote() {
     
     showLoading();
     
-    // Add fade out effect
+    // Add fade out effect with scale
     quoteText.style.opacity = '0';
+    quoteText.style.transform = 'translateY(-10px)';
     quoteAuthor.style.opacity = '0';
+    quoteAuthor.style.transform = 'translateY(-10px)';
     
     // Fetch new quote from API
     const quote = await fetchQuoteFromAPI();
@@ -226,12 +234,14 @@ async function displayQuote() {
             quoteAuthor.textContent += ' (Offline)';
         }
         
-        // Add fade in effect
+        // Add fade in effect with scale
         quoteText.style.opacity = '1';
+        quoteText.style.transform = 'translateY(0)';
         quoteAuthor.style.opacity = '1';
+        quoteAuthor.style.transform = 'translateY(0)';
         
         hideLoading();
-    }, 300);
+    }, 400);
 }
 
 // Event Listeners
