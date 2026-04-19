@@ -14,6 +14,19 @@
         <h1>Quote Generator</h1>
         <p class="description">Get inspired with random quotes</p>
         
+        <!-- Category Filter -->
+        <div class="filter-container">
+            <label for="categoryFilter">Category:</label>
+            <select id="categoryFilter" class="category-select">
+                <option value="all">All Categories</option>
+                <option value="motivation">Motivation</option>
+                <option value="life">Life</option>
+                <option value="success">Success</option>
+                <option value="wisdom">Wisdom</option>
+                <option value="inspiration">Inspiration</option>
+            </select>
+        </div>
+        
         <!-- Quote Display Container -->
         <div class="quote-container">
             <div class="quote-icon">
@@ -41,6 +54,41 @@
                 <span class="btn-icon">✨</span>
                 New Quote
             </button>
+            <button class="btn btn-secondary" id="copyBtn" title="Copy to clipboard">
+                <span class="btn-icon">📋</span>
+                Copy
+            </button>
+            <button class="btn btn-secondary" id="tweetBtn" title="Share on Twitter">
+                <span class="btn-icon">🐦</span>
+                Tweet
+            </button>
+            <button class="btn btn-favorite" id="favoriteBtn" title="Save to favorites">
+                <span class="btn-icon">🤍</span>
+            </button>
+        </div>
+        
+        <!-- Favorites Section -->
+        <div class="favorites-section">
+            <button class="btn btn-link" id="viewFavoritesBtn">
+                <span class="btn-icon">⭐</span>
+                View Favorites (<span id="favoritesCount">0</span>)
+            </button>
+        </div>
+    </div>
+    
+    <!-- Favorites Modal -->
+    <div class="modal" id="favoritesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Favorite Quotes</h2>
+                <button class="close-btn" id="closeFavoritesBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="favoritesList">
+                <p class="no-favorites">No favorite quotes yet. Click the heart icon to save quotes!</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="clearFavoritesBtn">Clear All</button>
+            </div>
         </div>
     </div>
 
