@@ -2,6 +2,8 @@
 
 // API Configuration
 const API_URL = 'https://api.quotable.io/random';
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // 1 second
 
 // Static Quote Data (Fallback)
 const quotes = [
@@ -95,27 +97,72 @@ const newQuoteBtn = document.getElementById('newQuoteBtn');
 // Track last displayed quote to prevent immediate repetition
 let lastQuoteIndex = -1;
 let isLoading = false;
+let apiFailureCount = 0;
+let usingFallback = false;
 
-// Function to fetch quote from API
-async function fetchQuoteFromAPI() {
+// Function to sleep/delay
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Function to fetch quote from API with retry logic
+async function fetchQuoteFromAPI(retryCount = 0) {
     try {
         const response = await fetch(API_URL);
         
         if (!response.ok) {
-            throw new Error('API request failed');
+            throw new Error(`API request failed with status: ${response.status}`);
         }
         
         const data = await response.json();
         
+        // Reset failure count on success
+        apiFailureCount = 0;
+        usingFallback = false;
+        
         return {
             text: data.content,
-            author: data.author
+            author: data.author,
+            source: 'api'
         };
     } catch (error) {
-        console.error('Error fetching quote from API:', error);
-        // Return fallback quote if API fails
-        return getRandomQuote();
+        console.error(`Error fetching quote from API (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error);
+        
+        // Retry logic
+        if (retryCount < MAX_RETRIES - 1) {
+            console.log(`Retrying in ${RETRY_DELAY}ms...`);
+            await sleep(RETRY_DELAY);
+            return fetchQuoteFromAPI(retryCount + 1);
+        }
+        
+        // All retries failed
+        apiFailureCount++;
+        usingFallback = true;
+        console.warn('API unavailable. Using fallback quotes.');
+        
+        // Return fallback quote
+        return {
+            ...getRandomQuote(),
+            source: 'fallback'
+        };
     }
+}
+
+// Function to show error notification
+function showErrorNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'error-notification';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Fade in
+    setTimeout(() => notification.classList.add('show'), 10);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
 // Function to get random quote from static data (fallback)
@@ -165,9 +212,19 @@ async function displayQuote() {
     // Fetch new quote from API
     const quote = await fetchQuoteFromAPI();
     
+    // Show notification if using fallback
+    if (quote.source === 'fallback' && apiFailureCount === 1) {
+        showErrorNotification('⚠️ API unavailable. Using offline quotes.');
+    }
+    
     setTimeout(() => {
         quoteText.textContent = quote.text;
         quoteAuthor.textContent = `- ${quote.author}`;
+        
+        // Add source indicator
+        if (quote.source === 'fallback') {
+            quoteAuthor.textContent += ' (Offline)';
+        }
         
         // Add fade in effect
         quoteText.style.opacity = '1';
@@ -184,12 +241,27 @@ newQuoteBtn.addEventListener('click', displayQuote);
 window.addEventListener('DOMContentLoaded', async () => {
     showLoading();
     
-    // Fetch initial quote from API
-    const quote = await fetchQuoteFromAPI();
-    quoteText.textContent = quote.text;
-    quoteAuthor.textContent = `- ${quote.author}`;
-    
-    hideLoading();
+    try {
+        // Fetch initial quote from API
+        const quote = await fetchQuoteFromAPI();
+        quoteText.textContent = quote.text;
+        quoteAuthor.textContent = `- ${quote.author}`;
+        
+        // Add source indicator
+        if (quote.source === 'fallback') {
+            quoteAuthor.textContent += ' (Offline)';
+            showErrorNotification('⚠️ API unavailable. Using offline quotes.');
+        }
+    } catch (error) {
+        console.error('Critical error on page load:', error);
+        // Show fallback quote
+        const fallbackQuote = getRandomQuote();
+        quoteText.textContent = fallbackQuote.text;
+        quoteAuthor.textContent = `- ${fallbackQuote.author} (Offline)`;
+        showErrorNotification('⚠️ Unable to load quotes. Using offline mode.');
+    } finally {
+        hideLoading();
+    }
 });
 
 console.log('Quote Generator initialized with API integration');
